@@ -1,0 +1,24 @@
+{
+  "name": "dbs-report",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async-mutex": "^0.3.2",
+    "cookie-parser": "^1.4.6",
+    "csv-parse": "^5.0.3",
+    "csvtojson": "^2.0.10",
+    "express": "^4.17.1",
+    "fs": "0.0.1-security",
+    "fs-stream-sync": "^2.0.5",
+    "multer": "^1.4.3",
+    "node-csv": "^0.1.2",
+    "node-xlsx": "^0.17.2",
+    "semaphore": "^1.1.0"
+  }
+}
