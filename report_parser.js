@@ -7,9 +7,14 @@ const Mutex = require('async-mutex');
 var currNewDocRow = 6;
 let clientLock = new Mutex.Mutex();
 
+function compareByThird(a, b) {
+    var aArr = a.split(',')[0];
+    var bArr = b.split(',')[0];
+    return parseInt(aArr[0]) - parseInt(bArr[0]);
+}
+
 async function appendNewDataToExistingFile(firstMonth, transPerMonth, insertRows, rows, firstMonthIndex, months, resolve, reject) {
     let release = await clientLock.acquire();
-    console.log("oldfile")
     await fs.createReadStream(`csv/${firstMonth}.csv`)
         .pipe(parse.parse(({ delimiter: ';' })))
         .on('data', (element) => {
@@ -35,6 +40,7 @@ async function appendNewDataToExistingFile(firstMonth, transPerMonth, insertRows
                 currRowDateElements = rows[currNewDocRow][0].split('-')
             }
             release();
+            insertRows.sort(compareByThird)
             var insertRowsString = 'Date;Value Date;Transaction Description 1;Transaction Description 2;Debit;Credit;Running Balance\n'
             for (var j = 0; j < insertRows.length; j++) {
                 insertRowsString += (insertRows[j] + '\n')
@@ -125,11 +131,9 @@ const parser = async (req, res) => {
                     if (fs.existsSync(`csv/${firstMonth}.csv`)) {//if there is a file for this date
                         //read csv rows and insert to insertRows and listOfExistTrans[date.day - 1].set(trans id)
                         const data = []//old file data
-                        console.log("yes")
                         appendNewDataToExistingFile(firstMonth, listOfExistTrans, insertRows, rows, firstMonthIndex, months, resolve, reject);
                     }
                     else {
-                        console.log("no")
                         appendNewDataToNewFile(firstMonth, listOfExistTrans, insertRows, rows, firstMonthIndex, months, resolve, reject);
                     }
                     firstMonthIndex++;
