@@ -8,9 +8,9 @@ var currNewDocRow = 6;
 let clientLock = new Mutex.Mutex();
 
 function compareByThird(a, b) {
-    var aArr = a.split(',')[0];
-    var bArr = b.split(',')[0];
-    return parseInt(aArr[0]) - parseInt(bArr[0]);
+    var aArr = a.split('-')[0];
+    var bArr = b.split('-')[0];
+    return parseInt(aArr) - parseInt(bArr);
 }
 
 async function appendNewDataToExistingFile(firstMonth, transPerMonth, insertRows, rows, firstMonthIndex, months, resolve, reject) {
@@ -40,7 +40,7 @@ async function appendNewDataToExistingFile(firstMonth, transPerMonth, insertRows
                 currRowDateElements = rows[currNewDocRow][0].split('-')
             }
             release();
-            insertRows.sort(compareByThird)
+            insertRows = insertRows.sort(compareByThird)
             var insertRowsString = 'Date;Value Date;Transaction Description 1;Transaction Description 2;Debit;Credit;Running Balance\n'
             for (var j = 0; j < insertRows.length; j++) {
                 insertRowsString += (insertRows[j] + '\n')
@@ -61,8 +61,6 @@ async function appendNewDataToNewFile(firstMonth, listOfExistTrans, insertRows, 
     var currentRowDate;
     if (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By")
         currentRowDate = rows[currNewDocRow][0].split('-')
-    console.log("currNewDocRow", currNewDocRow)
-    console.log("== months[firstMonthIndex]", months[firstMonthIndex])
     while (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By" && currentRowDate[1] == months[firstMonthIndex]) {
         if (!listOfExistTrans[parseInt(currentRowDate[0]) - 1].has(rows[currNewDocRow][3])) {//if the index exists in a specific date
             insertRows.push(rows[currNewDocRow].join(";"))
