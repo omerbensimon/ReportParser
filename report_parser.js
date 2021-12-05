@@ -21,20 +21,21 @@ async function appendNewDataToExistingFile(firstMonth, transPerMonth, insertRows
             // Add currently exisitng data (in exisint file) to a hashmap
             if (element[0] !== 'Date') {
                 var mapIndex = parseInt(element[0].split('-')[0]) - 1
-                if (!transPerMonth[mapIndex].has(element[3])) {//if transaction id does not exists in the same day
+                if (!transPerMonth[mapIndex].has(element[3] + element[5])) {//if transaction id does not exists in the same day
                     insertRows.push(element.join(";"))//add row to write in final doc 
-                    transPerMonth[mapIndex].set(element[3], element)
+                    transPerMonth[mapIndex].set(element[3] + element[5], element)
                 }
             }
         }).on('end', () => {
             var currRowDateElements;
-            if (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By") {
+            if (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By")
                 currRowDateElements = rows[currNewDocRow][0].split('-')
-            }
             while (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By" && currRowDateElements[1] == months[firstMonthIndex]) {
-                if (!transPerMonth[parseInt(currRowDateElements[0]) - 1].has(rows[currNewDocRow][3])) {
-                    insertRows.push(rows[currNewDocRow].join(";"))
-                    transPerMonth[parseInt(currRowDateElements[0]) - 1].set(rows[currNewDocRow][3], rows[currNewDocRow])
+                if (rows[currNewDocRow][2] != "DEPOSIT") {
+                    if (!transPerMonth[parseInt(currRowDateElements[0]) - 1].has(rows[currNewDocRow][3] + rows[currNewDocRow][5])) {
+                        insertRows.push(rows[currNewDocRow].join(";"))
+                        transPerMonth[parseInt(currRowDateElements[0]) - 1].set(rows[currNewDocRow][3] + rows[currNewDocRow][5], rows[currNewDocRow])
+                    }
                 }
                 currNewDocRow++;
                 currRowDateElements = rows[currNewDocRow][0].split('-')
@@ -42,15 +43,15 @@ async function appendNewDataToExistingFile(firstMonth, transPerMonth, insertRows
             release();
             insertRows = insertRows.sort(compareByThird)
             var insertRowsString = 'Date;Value Date;Transaction Description 1;Transaction Description 2;Debit;Credit;Running Balance\n'
-            for (var j = 0; j < insertRows.length; j++) {
+            for (var j = 0; j < insertRows.length; j++)
                 insertRowsString += (insertRows[j] + '\n')
-            }
+
             // write new csv\update exist csv in drive by insertRows list
             fs.writeFile(`csv/${firstMonth}.csv`, insertRowsString, function (err) {
-                if (err) {
+                if (err)
                     // I'd prefer to call "reject" here and add try/catch outside for sending 400
                     return reject(res.status(400).send({ 'error': err }));
-                }
+
                 console.log(`${firstMonth}.csv was saved in the current directory!`);
                 resolve();
             });
@@ -59,27 +60,30 @@ async function appendNewDataToExistingFile(firstMonth, transPerMonth, insertRows
 async function appendNewDataToNewFile(firstMonth, listOfExistTrans, insertRows, rows, firstMonthIndex, months, resolve, reject) {
     let release = await clientLock.acquire();
     var currentRowDate;
-    if (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By")
-        currentRowDate = rows[currNewDocRow][0].split('-')
+    if (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By") {
+        if (rows[currNewDocRow][0] != "Date")
+            currentRowDate = rows[currNewDocRow][0].split('-')
+    }
     while (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By" && currentRowDate[1] == months[firstMonthIndex]) {
-        if (!listOfExistTrans[parseInt(currentRowDate[0]) - 1].has(rows[currNewDocRow][3])) {//if the index exists in a specific date
-            insertRows.push(rows[currNewDocRow].join(";"))
-            listOfExistTrans[parseInt(currentRowDate[0]) - 1].set(rows[currNewDocRow][3], rows[currNewDocRow])
+        if (rows[currNewDocRow][2] != "DEPOSIT") {
+            if (!listOfExistTrans[parseInt(currentRowDate[0]) - 1].has(rows[currNewDocRow][3] + rows[currNewDocRow][5])) {//if the index exists in a specific date
+                insertRows.push(rows[currNewDocRow].join(";"))
+                listOfExistTrans[parseInt(currentRowDate[0]) - 1].set(rows[currNewDocRow][3] + rows[currNewDocRow][5], rows[currNewDocRow])
+            }
         }
         currNewDocRow++;
         currentRowDate = rows[currNewDocRow][0].split('-')
     }
     release();
     var insertRowsString = 'Date;Value Date;Transaction Description 1;Transaction Description 2;Debit;Credit;Running Balance\n'
-    for (var j = 0; j < insertRows.length; j++) {
+    for (var j = 0; j < insertRows.length; j++)
         insertRowsString += (insertRows[j] + '\n')
-    }
+
     // write new csv\update exist csv in drive by insertRows list
     await fs.writeFile(`csv/${firstMonth}.csv`, insertRowsString, function (err) {
-        if (err) {
+        if (err)
             // I'd prefer to call "reject" here and add try/catch outside for sending 400
             return reject(res.status(400).send({ 'error': err }));
-        }
         console.log(`${firstMonth}.csv was saved in the current directory!`);
         resolve();
     });
@@ -100,9 +104,9 @@ const parser = async (req, res) => {
                 let rows = [];
                 for (let i = 0; i < obj.length; i++) {
                     let sheet = obj[i];
-                    for (let j = 0; j < sheet['data'].length; j++) {
+                    for (let j = 0; j < sheet['data'].length; j++)
                         rows.push(sheet['data'][j]);
-                    }
+
                 }
                 let firstMonth = rows[6][0].split('-')
                 let firstMonthIndex = months.indexOf(firstMonth[1])
@@ -112,33 +116,27 @@ const parser = async (req, res) => {
                 let lastMonthIndex = months.indexOf(lastMonth[1])
                 lastMonth = String(lastMonthIndex + 1) + '.' + lastMonth[2]
                 let gap = 0
-                if (lastMonthIndex >= firstMonthIndex) {
+                if (lastMonthIndex >= firstMonthIndex)
                     gap = lastMonthIndex - firstMonthIndex + 1 //amount of months in the same year 
-                }
-                else {
+                else
                     gap = 12 - firstMonthIndex + lastMonthIndex + 1
-                }
-
                 for (var i = 0; i < gap; i++) {
                     const insertRows = []
                     const listOfExistTrans = [];
-                    for (var k = 0; k < 31; k++) {
+                    for (var k = 0; k < 31; k++)
                         listOfExistTrans.push(new Map());
-                    }
                     // take the old sheet of the current month index
                     if (fs.existsSync(`csv/${firstMonth}.csv`)) {//if there is a file for this date
                         //read csv rows and insert to insertRows and listOfExistTrans[date.day - 1].set(trans id)
                         const data = []//old file data
                         appendNewDataToExistingFile(firstMonth, listOfExistTrans, insertRows, rows, firstMonthIndex, months, resolve, reject);
                     }
-                    else {
+                    else
                         appendNewDataToNewFile(firstMonth, listOfExistTrans, insertRows, rows, firstMonthIndex, months, resolve, reject);
-                    }
                     firstMonthIndex++;
                     firstMonthIndex = (firstMonthIndex) % 12
-                    if (firstMonthIndex == 0) {
+                    if (firstMonthIndex == 0)
                         year = String(parseInt(year) + 1)
-                    }
                     firstMonth = String(firstMonthIndex + 1) + '.' + year
                 }
             }
