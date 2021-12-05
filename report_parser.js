@@ -31,11 +31,9 @@ async function appendNewDataToExistingFile(firstMonth, transPerMonth, insertRows
             if (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By")
                 currRowDateElements = rows[currNewDocRow][0].split('-')
             while (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By" && currRowDateElements[1] == months[firstMonthIndex]) {
-                if (rows[currNewDocRow][2] != "DEPOSIT") {
-                    if (!transPerMonth[parseInt(currRowDateElements[0]) - 1].has(rows[currNewDocRow][3] + rows[currNewDocRow][5])) {
-                        insertRows.push(rows[currNewDocRow].join(";"))
-                        transPerMonth[parseInt(currRowDateElements[0]) - 1].set(rows[currNewDocRow][3] + rows[currNewDocRow][5], rows[currNewDocRow])
-                    }
+                if (!transPerMonth[parseInt(currRowDateElements[0]) - 1].has(rows[currNewDocRow][3] + rows[currNewDocRow][5])) {
+                    insertRows.push(rows[currNewDocRow].join(";"))
+                    transPerMonth[parseInt(currRowDateElements[0]) - 1].set(rows[currNewDocRow][3] + rows[currNewDocRow][5], rows[currNewDocRow])
                 }
                 currNewDocRow++;
                 currRowDateElements = rows[currNewDocRow][0].split('-')
@@ -65,11 +63,9 @@ async function appendNewDataToNewFile(firstMonth, listOfExistTrans, insertRows, 
             currentRowDate = rows[currNewDocRow][0].split('-')
     }
     while (rows[currNewDocRow][0] != "Printed On" && rows[currNewDocRow][0] != "Printed By" && currentRowDate[1] == months[firstMonthIndex]) {
-        if (rows[currNewDocRow][2] != "DEPOSIT") {
-            if (!listOfExistTrans[parseInt(currentRowDate[0]) - 1].has(rows[currNewDocRow][3] + rows[currNewDocRow][5])) {//if the index exists in a specific date
-                insertRows.push(rows[currNewDocRow].join(";"))
-                listOfExistTrans[parseInt(currentRowDate[0]) - 1].set(rows[currNewDocRow][3] + rows[currNewDocRow][5], rows[currNewDocRow])
-            }
+        if (!listOfExistTrans[parseInt(currentRowDate[0]) - 1].has(rows[currNewDocRow][3] + rows[currNewDocRow][5])) {//if the index exists in a specific date
+            insertRows.push(rows[currNewDocRow].join(";"))
+            listOfExistTrans[parseInt(currentRowDate[0]) - 1].set(rows[currNewDocRow][3] + rows[currNewDocRow][5], rows[currNewDocRow])
         }
         currNewDocRow++;
         currentRowDate = rows[currNewDocRow][0].split('-')
